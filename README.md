@@ -1,5 +1,9 @@
 # shufflekit
 
+> **Educational and personal use only.** This project is for people who still own an iPod shuffle and want to sync music from their own Apple Music library to their own device, for their own personal listening. It does not crack, remove, or circumvent DRM. Apple Music streams are recorded via the system's own audio output (BlackHole) - the same as holding a microphone to a speaker. Use only with content you have a legitimate right to access. Respect artists and labels.
+
+> **Disclaimer:** This project is not affiliated with or endorsed by Apple Inc. iPod and Apple Music are trademarks of Apple Inc. This software is provided "as is" under the MIT license, with no warranty. You are responsible for complying with applicable laws and terms of service.
+
 Flash music onto an **iPod shuffle 3rd or 4th generation** from a modern Mac or Linux box. No iTunes. No Music.app. The shuffle just looks like a FAT32 disk. We write the play database it actually reads.
 
 Apple's Music app on recent macOS often mounts the thing as a USB stick and never shows it as a device. The player is fine. The computer-side app is what died.
