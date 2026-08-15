@@ -11,7 +11,7 @@ Apple's Music app on recent macOS often mounts the thing as a USB stick and neve
 - Copies MP3 / AAC onto the hashed `F00`… folders
 - Rebuilds `iTunesSD` (bdhs v3)
 - Speaks track names into `Speakable/Tracks` so 3rd gen VoiceOver still works
-- Ships a local web UI for drag-and-drop
+- Ships a local black-and-white web UI
 
 It will not restore firmware. It will not talk to AirPods. 3rd gen still needs the old wired Apple earbuds with the inline remote.
 

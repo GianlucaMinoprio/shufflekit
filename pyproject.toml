@@ -1,6 +1,6 @@
 [project]
 name = "shufflekit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Flash music onto an iPod shuffle 3rd/4th gen without iTunes."
 readme = "README.md"
 requires-python = ">=3.9"

@@ -5,90 +5,113 @@ async function api(path, opts) {
   return data;
 }
 
+const badge = document.getElementById("badge");
+const verEl = document.getElementById("ver");
 const deviceLine = document.getElementById("device-line");
 const deviceMeta = document.getElementById("device-meta");
+const spaceEl = document.getElementById("space");
 const tracksEl = document.getElementById("tracks");
 const countEl = document.getElementById("count");
-const verEl = document.getElementById("ver");
 const fileEl = document.getElementById("file");
 const drop = document.getElementById("drop");
+const statusEl = document.getElementById("status");
+
+function fmtTime(ms) {
+  const s = Math.max(0, Math.round((ms || 0) / 1000));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ":" + String(r).padStart(2, "0");
+}
 
 async function refresh() {
   const st = await api("/api/status");
-  verEl.textContent = "v" + (st.version || "");
+  verEl.textContent = st.version ? "v" + st.version : "";
   if (!st.connected) {
-    deviceLine.textContent = "No shuffle mounted";
-    deviceMeta.textContent = "Plug it in. Wait until you see a disk named IPOD, then refresh.";
+    badge.textContent = "Offline";
+    badge.classList.remove("on");
+    deviceLine.textContent = "No shuffle";
+    deviceMeta.textContent = "Plug it in.";
+    spaceEl.textContent = "";
     tracksEl.innerHTML = "";
     countEl.textContent = "0";
     return;
   }
-  deviceLine.textContent = "Connected · " + st.volume;
-  const gb = (n) => (n / 1e9).toFixed(2);
-  deviceMeta.textContent =
-    (st.serial ? "Serial " + st.serial + " · " : "") +
-    gb(st.free_bytes) + " GB free of " + gb(st.total_bytes) +
-    " · " + st.root;
+  badge.textContent = "Connected";
+  badge.classList.add("on");
+  deviceLine.textContent = st.volume || "IPOD";
+  deviceMeta.textContent = st.serial || "";
+  const gb = (n) => (n / 1e9).toFixed(1);
+  spaceEl.textContent = gb(st.free_bytes) + " / " + gb(st.total_bytes) + " GB";
+
   const list = await api("/api/tracks");
+  const rows = list.tracks || [];
+  countEl.textContent = String(rows.length);
   tracksEl.innerHTML = "";
-  countEl.textContent = String((list.tracks || []).length);
-  for (const t of list.tracks || []) {
-    const li = document.createElement("li");
-    const sec = Math.round((t.duration_ms || 0) / 1000);
-    li.textContent = t.name + "  " + sec + "s";
-    if (!t.exists) {
-      li.className = "missing";
-      li.textContent += "  missing file";
-    }
-    tracksEl.appendChild(li);
+  for (const t of rows) {
+    const tr = document.createElement("tr");
+    if (!t.exists) tr.className = "missing";
+    tr.innerHTML =
+      '<td class="num">' + t.n + "</td>" +
+      "<td>" + escapeHtml(t.name) + "</td>" +
+      '<td class="num">' + fmtTime(t.duration_ms) + "</td>";
+    tracksEl.appendChild(tr);
   }
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function setStatus(text) {
+  statusEl.textContent = text || "";
+}
+
 document.getElementById("add").onclick = async () => {
-  const status = document.getElementById("add-status");
   if (!fileEl.files.length) {
-    status.textContent = "Pick files first";
+    setStatus("Pick files.");
     return;
   }
   const fd = new FormData();
   for (const f of fileEl.files) fd.append("files", f, f.name);
-  status.textContent = "Writing…";
+  setStatus("Writing…");
   try {
     const r = await api("/api/add", { method: "POST", body: fd });
-    status.textContent = "Added " + r.added + ". Playable " + r.tracks + ".";
+    setStatus("Added " + r.added + ".");
     fileEl.value = "";
     await refresh();
   } catch (e) {
-    status.textContent = e.message;
+    setStatus(e.message);
   }
 };
 
-document.getElementById("orphans").onclick = () => runRebuild(true, "rebuild-status");
-document.getElementById("rebuild").onclick = () => runRebuild(false, "rebuild-status");
+document.getElementById("orphans").onclick = () => runRebuild(true);
+document.getElementById("rebuild").onclick = () => runRebuild(false);
 
-async function runRebuild(orphans, id) {
-  const status = document.getElementById(id);
-  status.textContent = "Rebuilding…";
+async function runRebuild(orphans) {
+  setStatus("Rebuilding…");
   try {
     const r = await api("/api/rebuild", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orphans, voiceover: true }),
     });
-    status.textContent = "Playable " + r.tracks + ".";
+    setStatus(r.tracks + " playable.");
     await refresh();
   } catch (e) {
-    status.textContent = e.message;
+    setStatus(e.message);
   }
 }
 
-;["dragenter", "dragover"].forEach((ev) => {
+["dragenter", "dragover"].forEach((ev) => {
   drop.addEventListener(ev, (e) => {
     e.preventDefault();
     drop.classList.add("over");
   });
 });
-;["dragleave", "drop"].forEach((ev) => {
+["dragleave", "drop"].forEach((ev) => {
   drop.addEventListener(ev, (e) => {
     e.preventDefault();
     drop.classList.remove("over");
@@ -101,6 +124,7 @@ drop.addEventListener("drop", (e) => {
 });
 
 refresh().catch((e) => {
-  deviceLine.textContent = "UI backend is down";
+  badge.textContent = "Error";
+  deviceLine.textContent = "Server down";
   deviceMeta.textContent = e.message;
 });

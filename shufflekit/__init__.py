@@ -1,6 +1,6 @@
 """shufflekit: flash music onto iPod shuffle 3rd/4th gen without iTunes."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .detect import find_shuffles
 from .library import ShuffleLibrary

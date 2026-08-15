@@ -4,53 +4,66 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>shufflekit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <h1>shufflekit</h1>
+    </div>
+    <div class="top-meta">
+      <span id="badge" class="badge">…</span>
+      <span id="ver" class="muted mono"></span>
+    </div>
+  </header>
+
   <main>
-    <header>
-      <div class="mark" aria-hidden="true"></div>
-      <div>
-        <h1>shufflekit</h1>
-        <p class="tag">Flash an iPod shuffle without iTunes.</p>
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2 id="device-line">Looking for a shuffle</h2>
+          <p id="device-meta" class="muted">Plug it in.</p>
+        </div>
+        <span id="space" class="muted mono"></span>
       </div>
-      <span id="ver" class="pill"></span>
-    </header>
 
-    <section id="device" class="card">
-      <p id="device-line">Looking for a shuffle…</p>
-      <p id="device-meta" class="muted"></p>
-    </section>
+      <div id="drop" class="drop">
+        <input id="file" type="file" accept=".mp3,.m4a,.m4b,.aac,.wav,audio/*" multiple />
+        <p>Drop MP3 or AAC, or browse.</p>
+      </div>
 
-    <section class="card drop" id="drop">
-      <h2>Add music</h2>
-      <p>Drop MP3 or AAC here. We copy the files, rebuild the play database, and speak track names for 3rd gen.</p>
-      <input id="file" type="file" accept=".mp3,.m4a,.m4b,.aac,.wav,audio/*" multiple />
-      <div class="row">
-        <button id="add" type="button">Add to shuffle</button>
-        <span id="add-status" class="muted"></span>
+      <div class="actions">
+        <button id="add" type="button">Add</button>
+        <button id="orphans" type="button" class="outline">Include loose files</button>
+        <button id="rebuild" type="button" class="ghost">Rebuild</button>
+        <span id="status" class="muted"></span>
       </div>
     </section>
 
     <section class="card">
-      <h2>Already on the disk</h2>
-      <p>If someone dumped files into a folder (the old <code>musique/</code> trick), they will not play until they are in the database.</p>
-      <div class="row">
-        <button id="orphans" type="button">Include dumped files</button>
-        <button id="rebuild" type="button" class="ghost">Rebuild current list</button>
-        <span id="rebuild-status" class="muted"></span>
+      <div class="card-head">
+        <h2>On device</h2>
+        <span id="count" class="badge">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num">#</th>
+              <th>File</th>
+              <th class="num">Time</th>
+            </tr>
+          </thead>
+          <tbody id="tracks"></tbody>
+        </table>
       </div>
     </section>
-
-    <section class="card">
-      <h2>Playable now <span id="count" class="pill">0</span></h2>
-      <ol id="tracks"></ol>
-    </section>
-
-    <footer>
-      <p>3rd gen needs wired Apple earbuds with the remote. Leave it plugged in if VoiceOver says low battery. Red LED is under 25%.</p>
-    </footer>
   </main>
+
   <script src="/app.js"></script>
 </body>
 </html>
