@@ -8,10 +8,12 @@ Apple's Music app on recent macOS often mounts the thing as a USB stick and neve
 
 - Finds a mounted shuffle (`iPod_Control/iTunes/iTunesSD`)
 - Lists the tracks that will actually play
-- Copies MP3 / AAC onto the hashed `F00`… folders
+- Copies MP3 / AAC onto the hashed `F00`... folders
 - Rebuilds `iTunesSD` (bdhs v3)
 - Speaks track names into `Speakable/Tracks` so 3rd gen VoiceOver still works
-- Ships a local black-and-white web UI
+- Ships a local web UI for drag-and-drop
+- Browse Apple Music playlists and import them
+- Record DRM Apple Music streams to the shuffle via BlackHole (real-time)
 
 It will not restore firmware. It will not talk to AirPods. 3rd gen still needs the old wired Apple earbuds with the inline remote.
 
@@ -21,7 +23,7 @@ It will not restore firmware. It will not talk to AirPods. 3rd gen still needs t
 python3 -m pip install -e .
 ```
 
-Or just run from the repo:
+Or run from the repo:
 
 ```bash
 PYTHONPATH=. python3 -m shufflekit detect
@@ -39,7 +41,25 @@ shufflekit rebuild --orphans --voiceover
 shufflekit serve
 ```
 
-`serve` opens `http://127.0.0.1:8765/`. Drop files there.
+`serve` opens `http://127.0.0.1:8765/`. Drop files there or browse your Apple Music playlists.
+
+### Apple Music playlist import
+
+The web UI lists all your Music.app playlists. Click one to see how many tracks are copyable (file-backed) vs DRM streams.
+
+- **File-backed tracks** (purchased, CD rips) copy directly in seconds.
+- **Apple Music streams** (`.m4p`, FairPlay DRM) are recorded in real-time via [BlackHole](https://existential.audio/blackhole/), a free virtual audio cable. Music.app plays the DRM track; BlackHole routes the audio to a file. A 3-minute song takes 3 minutes.
+
+To enable recording:
+
+```bash
+brew install --cask blackhole-2ch
+# Reboot after install
+```
+
+After reboot, create a Multi-Output Device in Audio MIDI Setup that includes both your speakers and BlackHole 2ch, so you can hear music while it records.
+
+### Orphan files
 
 If someone long ago dragged MP3s into a folder on the disk (classic `musique/` mistake), those files sit there and never play. `rebuild --orphans` puts them in the database.
 
@@ -51,13 +71,13 @@ The Mac cannot read a numeric percent. USB exposes the disk, not the fuel gauge.
 
 If VoiceOver said **low battery**, believe it. Leave it plugged in.
 
-| LED | Charge |
-|---|---|
-| Green | 50–100% |
-| Orange | 25–49% |
-| Red | under 25% |
-| Blinking red | under 1% |
-| Blinking orange | talking to the computer |
+| LED | Charge |  
+|---|---|  
+| Green | 50-100% |  
+| Orange | 25-49% |  
+| Red | under 25% |  
+| Blinking red | under 1% |  
+| Blinking orange | talking to the computer |  
 
 3rd gen charges over USB. Give it a couple of hours if it is red.
 

@@ -1,69 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>shufflekit</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <span class="logo" aria-hidden="true"></span>
-      <h1>shufflekit</h1>
-    </div>
-    <div class="top-meta">
-      <span id="badge" class="badge">…</span>
-      <span id="ver" class="muted mono"></span>
-    </div>
-  </header>
-
-  <main>
-    <section class="card">
-      <div class="card-head">
-        <div>
-          <h2 id="device-line">Looking for a shuffle</h2>
-          <p id="device-meta" class="muted">Plug it in.</p>
+  <div class="min-h-screen bg-background text-foreground">
+    <main class="mx-auto max-w-2xl px-6 py-12">
+      <!-- Header -->
+      <header class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full border-2 border-foreground flex items-center justify-center">
+            <div class="w-2 h-2 rounded-full bg-foreground"></div>
+          </div>
+          <div>
+            <h1 class="text-xl font-semibold tracking-tight">shufflekit</h1>
+            <p class="text-sm text-muted-foreground">Flash an iPod shuffle without iTunes.</p>
+          </div>
         </div>
-        <span id="space" class="muted mono"></span>
-      </div>
+        <span id="ver" class="badge"></span>
+      </header>
 
-      <div id="drop" class="drop">
-        <input id="file" type="file" accept=".mp3,.m4a,.m4b,.aac,.wav,audio/*" multiple />
-        <p>Drop MP3 or AAC, or browse.</p>
-      </div>
+      <!-- Device status -->
+      <section id="device" class="card mb-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <p id="device-line" class="font-medium">Looking for a shuffle…</p>
+            <p id="device-meta" class="text-sm text-muted-foreground mt-1"></p>
+          </div>
+          <div id="device-led" class="status-dot"></div>
+        </div>
+      </section>
 
-      <div class="actions">
-        <button id="add" type="button">Add</button>
-        <button id="orphans" type="button" class="outline">Include loose files</button>
-        <button id="rebuild" type="button" class="ghost">Rebuild</button>
-        <span id="status" class="muted"></span>
-      </div>
-    </section>
+      <!-- Apple Music import -->
+      <section class="card mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold">Apple Music playlists</h2>
+          <button id="refresh-playlists" class="btn-ghost text-xs">Refresh</button>
+        </div>
+        <p class="text-sm text-muted-foreground mb-3">Browse your Music.app playlists. DRM-free tracks copy directly. Apple Music streams are recorded in real-time via BlackHole.</p>
+        <div id="playlist-list" class="space-y-2"></div>
+        <div id="playlist-detail" class="mt-3 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <p id="playlist-info" class="text-sm"></p>
+            <button id="record-playlist" class="btn text-xs">Record to shuffle</button>
+          </div>
+          <div id="record-progress" class="mt-3 hidden">
+            <div class="progress-bar"><div id="record-bar" class="progress-fill"></div></div>
+            <p id="record-status" class="text-xs text-muted-foreground mt-2"></p>
+          </div>
+        </div>
+      </section>
 
-    <section class="card">
-      <div class="card-head">
-        <h2>On device</h2>
-        <span id="count" class="badge">0</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="num">#</th>
-              <th>File</th>
-              <th class="num">Time</th>
-            </tr>
-          </thead>
-          <tbody id="tracks"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+      <!-- Add music -->
+      <section class="card mb-4 drop-zone" id="drop">
+        <h2 class="text-sm font-semibold mb-2">Add music</h2>
+        <p class="text-sm text-muted-foreground mb-3">Drop MP3 or AAC here, or use the file picker. Files are copied and the play database is rebuilt.</p>
+        <input id="file" type="file" accept=".mp3,.m4a,.m4b,.aac,.wav,audio/*" multiple class="text-xs text-muted-foreground mb-3 block w-full" />
+        <div class="flex items-center gap-3">
+          <button id="add" class="btn">Add to shuffle</button>
+          <span id="add-status" class="text-sm text-muted-foreground"></span>
+        </div>
+      </section>
 
+      <!-- Orphans -->
+      <section class="card mb-4">
+        <h2 class="text-sm font-semibold mb-2">Orphans</h2>
+        <p class="text-sm text-muted-foreground mb-3">Files dumped into folders (the old <code>musique/</code> trick) will not play until they're in the database.</p>
+        <div class="flex items-center gap-3 flex-wrap">
+          <button id="orphans" class="btn">Include dumped files</button>
+          <button id="rebuild" class="btn-ghost">Rebuild current list</button>
+          <span id="rebuild-status" class="text-sm text-muted-foreground"></span>
+        </div>
+      </section>
+
+      <!-- Track list -->
+      <section class="card mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold">Playable tracks</h2>
+          <span id="count" class="badge">0</span>
+        </div>
+        <ol id="tracks" class="track-list"></ol>
+      </section>
+
+      <footer class="mt-6 text-xs text-muted-foreground">
+        <p>3rd gen needs wired Apple earbuds with the remote. Leave it plugged in if VoiceOver says low battery. Red LED is under 25%.</p>
+      </footer>
+    </main>
+  </div>
   <script src="/app.js"></script>
 </body>
 </html>
