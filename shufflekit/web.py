@@ -38,6 +38,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(self._tracks())
         if parsed.path == "/api/playlists":
             return self._json(self._playlists())
+        if parsed.path == "/api/playlist-tracks":
+            return self._json(self._playlist_tracks(parsed.query))
         if parsed.path == "/api/record-progress":
             return self._json(dict(_record_progress))
         if parsed.path == "/api/blackhole-status":
@@ -109,6 +111,27 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception as exc:
             return {"ok": True, "playlists": [], "error": str(exc)}
 
+    def _playlist_tracks(self, query: str):
+        from urllib.parse import parse_qs
+        from .music import playlist_entries, music_available
+        if not music_available():
+            return {"ok": True, "tracks": [], "error": "Music.app is not running"}
+        params = parse_qs(query)
+        name = (params.get("name") or [""])[0]
+        if not name:
+            return {"ok": True, "tracks": [], "error": "no playlist name"}
+        try:
+            entries = playlist_entries(name)
+            return {
+                "ok": True,
+                "tracks": [
+                    {"idx": i, "title": e.title, "artist": e.artist, "is_stream": e.is_stream}
+                    for i, e in enumerate(entries)
+                ],
+            }
+        except Exception as exc:
+            return {"ok": True, "tracks": [], "error": str(exc)}
+
     def _rebuild(self, body):
         lib = ShuffleLibrary.open_default()
         lib.backup_db()
@@ -134,9 +157,10 @@ class Handler(SimpleHTTPRequestHandler):
         name = body.get("playlist", "")
         if not name:
             return {"ok": False, "error": "no playlist name"}
+        selected = body.get("selected", None)  # list of 0-based indices, or None for all
         # Start recording in background thread
         _record_progress.update(active=True, done=0, total=0, status="starting")
-        t = threading.Thread(target=_do_record, args=(name,), daemon=True)
+        t = threading.Thread(target=_do_record, args=(name, selected), daemon=True)
         t.start()
         return {"ok": True, "status": "recording started", "playlist": name}
 
@@ -150,13 +174,15 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
 
-def _do_record(playlist_name: str):
+def _do_record(playlist_name: str, selected=None):
     """Background thread: record playlist tracks and add to shuffle."""
     from .music import playlist_entries
     from .recorder import record_track, convert_to_m4a, blackhole_available, _stop_playback
 
     try:
         entries = playlist_entries(playlist_name)
+        if selected is not None:
+            entries = [e for i, e in enumerate(entries) if i in selected]
         _record_progress.update(total=len(entries), done=0, status="recording")
 
         if not blackhole_available():

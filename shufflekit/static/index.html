@@ -61,8 +61,14 @@
       </div>
       <div id="playlist-list" class="pl-list"></div>
       <div id="pl-detail" class="pl-detail hidden">
+        <div class="pl-toolbar">
+          <button id="pl-select-all" type="button" class="ghost">Select all</button>
+          <button id="pl-select-none" type="button" class="ghost">Deselect all</button>
+          <span id="pl-count" class="muted mono"></span>
+        </div>
+        <div id="pl-tracks" class="pl-tracks"></div>
         <div class="actions">
-          <button id="pl-record" type="button">Record to shuffle</button>
+          <button id="pl-record" type="button">Record selected</button>
           <span id="pl-status" class="muted"></span>
         </div>
         <div id="pl-progress" class="progress hidden">

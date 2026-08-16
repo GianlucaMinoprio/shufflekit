@@ -186,6 +186,61 @@ bhInstall.onclick = async () => {
 
 checkBlackHole();
 
+const plTracksEl = document.getElementById("pl-tracks");
+const plCountEl = document.getElementById("pl-count");
+const plSelectAll = document.getElementById("pl-select-all");
+const plSelectNone = document.getElementById("pl-select-none");
+let playlistTrackData = [];
+
+function getSelectedIndices() {
+  const checks = plTracksEl.querySelectorAll("input[type=checkbox]:checked");
+  return Array.from(checks).map(cb => parseInt(cb.value));
+}
+
+function updatePlCount() {
+  const checks = plTracksEl.querySelectorAll("input[type=checkbox]:checked");
+  const total = plTracksEl.querySelectorAll("input[type=checkbox]").length;
+  plCountEl.textContent = checks.length + " / " + total + " selected";
+}
+
+plSelectAll.onclick = () => {
+  plTracksEl.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = true);
+  updatePlCount();
+};
+
+plSelectNone.onclick = () => {
+  plTracksEl.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = false);
+  updatePlCount();
+};
+
+async function loadPlaylistTracks(name) {
+  plTracksEl.innerHTML = '<p class="muted" style="padding:10px">Loading tracks…</p>';
+  try {
+    const data = await api("/api/playlist-tracks?name=" + encodeURIComponent(name));
+    if (data.error) {
+      plTracksEl.innerHTML = '<p class="muted" style="padding:10px">' + escapeHtml(data.error) + "</p>";
+      return;
+    }
+    playlistTrackData = data.tracks || [];
+    plTracksEl.innerHTML = "";
+    for (const t of playlistTrackData) {
+      const row = document.createElement("label");
+      row.className = "pl-track";
+      const badge = t.is_stream ? '<span class="pl-badge">stream</span>' : '<span class="pl-badge">file</span>';
+      row.innerHTML =
+        '<input type="checkbox" value="' + t.idx + '" checked />' +
+        '<span class="pl-ttitle">' + escapeHtml(t.title) + "</span>" +
+        '<span class="pl-tartist">' + escapeHtml(t.artist || "") + "</span>" +
+        badge;
+      row.querySelector("input").onchange = updatePlCount;
+      plTracksEl.appendChild(row);
+    }
+    updatePlCount();
+  } catch (e) {
+    plTracksEl.innerHTML = '<p class="muted" style="padding:10px">' + escapeHtml(e.message) + "</p>";
+  }
+}
+
 async function loadPlaylists() {
   plList.innerHTML = '<p class="muted">Loading…</p>';
   try {
@@ -216,7 +271,10 @@ async function loadPlaylists() {
         plStatus.textContent = "";
         plProgress.classList.add("hidden");
         plBar.style.width = "0%";
-        plRecord.textContent = fc > 0 && sc > 0 ? "Copy + record" : fc > 0 ? "Copy to shuffle" : "Record to shuffle";
+        const fc = pl.file_tracks || 0;
+        const sc = pl.stream_tracks || 0;
+        plRecord.textContent = "Record selected";
+        loadPlaylistTracks(pl.name);
       };
       plList.appendChild(row);
     }
@@ -229,6 +287,11 @@ document.getElementById("pl-refresh").onclick = loadPlaylists;
 
 plRecord.onclick = async () => {
   if (!selectedPlaylist) return;
+  const selected = Array.from(plTracksEl.querySelectorAll("input[type=checkbox]:checked")).map(cb => parseInt(cb.value));
+  if (selected.length === 0) {
+    plStatus.textContent = "Select at least one track.";
+    return;
+  }
   plRecord.disabled = true;
   plProgress.classList.remove("hidden");
   plBar.style.width = "0%";
@@ -237,7 +300,7 @@ plRecord.onclick = async () => {
     await api("/api/record-playlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ playlist: selectedPlaylist }),
+      body: JSON.stringify({ playlist: selectedPlaylist, selected: selected }),
     });
     // Poll progress
     const poll = setInterval(async () => {
