@@ -54,14 +54,14 @@ The web UI lists all your Music.app playlists. Click one to see how many tracks 
 - **File-backed tracks** (purchased, CD rips) copy directly in seconds.
 - **Apple Music streams** (`.m4p`, FairPlay DRM) are recorded in real-time via [BlackHole](https://existential.audio/blackhole/), a free virtual audio cable. Music.app plays the DRM track; BlackHole routes the audio to a file. A 3-minute song takes 3 minutes.
 
-To enable recording:
+To enable recording, just click **Install BlackHole** in the web UI. It downloads the official pkg and opens the macOS installer for you (enter your Mac password, reboot after). Or install manually:
 
 ```bash
 brew install --cask blackhole-2ch
 # Reboot after install
 ```
 
-After reboot, create a Multi-Output Device in Audio MIDI Setup that includes both your speakers and BlackHole 2ch, so you can hear music while it records.
+After reboot, click **Open Audio MIDI Setup** in the web UI (or open it manually). Create a Multi-Output Device that includes both your speakers and BlackHole 2ch, so you can hear music while it records.
 
 ### Orphan files
 

@@ -33,6 +33,59 @@ def blackhole_available() -> bool:
         return False
 
 
+def install_blackhole() -> dict:
+    """Download and launch the BlackHole installer.
+
+    Downloads the official pkg from existential.audio, then opens it
+    with the macOS Installer GUI. The user enters their Mac password
+    in the standard installer prompt. Returns status info.
+    """
+    if blackhole_available():
+        return {"installed": True, "message": "BlackHole is already installed."}
+
+    import urllib.request
+    import shutil
+
+    url = "https://existential.audio/downloads/BlackHole2ch-0.7.1.pkg"
+    pkg_path = Path(tempfile.gettempdir()) / "BlackHole2ch-0.7.1.pkg"
+
+    # Download with curl (handles redirects + user-agent)
+    r = subprocess.run(
+        ["curl", "-sL", "-o", str(pkg_path), url],
+        capture_output=True, text=True, timeout=30,
+    )
+    if r.returncode != 0 or not pkg_path.exists() or pkg_path.stat().st_size < 10000:
+        return {"installed": False, "error": "Failed to download BlackHole pkg."}
+
+    # Open the installer GUI - user clicks Continue and enters their password
+    subprocess.Popen(["open", str(pkg_path)])
+
+    return {
+        "installed": False,
+        "launching": True,
+        "message": "Installer opened. Click Continue and enter your Mac password. Reboot after install.",
+        "pkg_path": str(pkg_path),
+    }
+
+
+def setup_blackhole_multi_output() -> dict:
+    """Create a Multi-Output Device combining speakers + BlackHole via Audio MIDI Setup.
+
+    This requires the user to do it manually in Audio MIDI Setup, but we can
+    open the app for them.
+    """
+    if not blackhole_available():
+        return {"error": "BlackHole not installed yet."}
+
+    # Open Audio MIDI Setup
+    subprocess.Popen(["open", "-a", "Audio MIDI Setup"])
+    return {
+        "message": "Audio MIDI Setup opened. Click '+' → 'Create Multi-Output Device', "
+                   "then check both your speakers/headphones and BlackHole 2ch. "
+                   "Set it as default output in Settings → Sound."
+    }
+
+
 def record_track(
     entry: PlaylistEntry,
     output_dir: Path,

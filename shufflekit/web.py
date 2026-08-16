@@ -40,6 +40,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(self._playlists())
         if parsed.path == "/api/record-progress":
             return self._json(dict(_record_progress))
+        if parsed.path == "/api/blackhole-status":
+            from .recorder import blackhole_available
+            return self._json({"ok": True, "installed": blackhole_available()})
+        if parsed.path == "/api/blackhole-setup":
+            from .recorder import setup_blackhole_multi_output
+            return self._json({"ok": True, **setup_blackhole_multi_output()})
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
@@ -55,6 +61,9 @@ class Handler(SimpleHTTPRequestHandler):
             if parsed.path == "/api/record-playlist":
                 body = json.loads(raw.decode("utf-8") or "{}")
                 return self._json(self._record_playlist(body))
+            if parsed.path == "/api/blackhole-install":
+                from .recorder import install_blackhole
+                return self._json({"ok": True, **install_blackhole()})
         except Exception as exc:
             return self._json({"ok": False, "error": str(exc), "trace": traceback.format_exc()}, 400)
         self.send_error(404)

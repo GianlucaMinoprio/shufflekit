@@ -159,3 +159,5 @@ tr:last-child td { border-bottom: 0; }
 .progress { margin-top: 8px; }
 .bar { height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .fill { height: 100%; background: var(--fg); border-radius: 999px; transition: width 0.3s; width: 0%; }
+.bh-banner { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; background: var(--hover); }
+.bh-banner p { margin: 0 0 6px; font-size: 13px; }

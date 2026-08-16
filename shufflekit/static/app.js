@@ -138,6 +138,54 @@ const plProgress = document.getElementById("pl-progress");
 const plBar = document.getElementById("pl-bar");
 let selectedPlaylist = null;
 
+/* --- BlackHole auto-install --- */
+const bhBanner = document.getElementById("bh-status");
+const bhMsg = document.getElementById("bh-msg");
+const bhInstall = document.getElementById("bh-install");
+const bhSetup = document.getElementById("bh-setup");
+
+async function checkBlackHole() {
+  try {
+    const r = await api("/api/blackhole-status");
+    if (r.installed) {
+      bhBanner.classList.add("hidden");
+    } else {
+      bhBanner.classList.remove("hidden");
+      bhMsg.textContent = "BlackHole not detected. Needed to record Apple Music streams.";
+      bhInstall.classList.remove("hidden");
+      bhSetup.classList.add("hidden");
+    }
+  } catch {}
+}
+
+bhInstall.onclick = async () => {
+  bhInstall.disabled = true;
+  bhMsg.textContent = "Downloading installer…";
+  try {
+    const r = await api("/api/blackhole-install", { method: "POST" });
+    if (r.installed) {
+      bhBanner.classList.add("hidden");
+      bhMsg.textContent = "BlackHole is installed!";
+    } else if (r.launching) {
+      bhMsg.textContent = r.message || "Installer opened. Click Continue and enter your Mac password.";
+      bhInstall.classList.add("hidden");
+      bhSetup.classList.remove("hidden");
+      bhSetup.onclick = async () => {
+        const s = await api("/api/blackhole-setup");
+        bhMsg.textContent = s.message || "Audio MIDI Setup opened.";
+      };
+    } else if (r.error) {
+      bhMsg.textContent = r.error;
+      bhInstall.disabled = false;
+    }
+  } catch (e) {
+    bhMsg.textContent = e.message;
+    bhInstall.disabled = false;
+  }
+};
+
+checkBlackHole();
+
 async function loadPlaylists() {
   plList.innerHTML = '<p class="muted">Loading…</p>';
   try {
